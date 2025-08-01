@@ -1,4 +1,4 @@
-This is the Folder Structure
+
 # Folder Structure
 
 ```plaintext    
