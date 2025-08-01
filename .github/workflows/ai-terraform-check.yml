@@ -20,18 +20,16 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Set up Python & install OpenAI SDK
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install openai
+        run: pip install openai
 
-      - name: Run Terraform (Expecting it may fail)
+      - name: Run Terraform and Capture Errors
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           mkdir -p logs
           terraform -chdir=terraform init
-          terraform -chdir=terraform apply -auto-approve -no-color 2> logs/error.log || true
+          terraform -chdir=terraform apply -auto-approve 2> logs/error.log || echo "Terraform failed. Capturing error."
 
       - name: Show raw Terraform error log
         run: |
@@ -47,11 +45,11 @@ jobs:
           echo "### 🧠 AI Explanation of Terraform Error" >> $GITHUB_STEP_SUMMARY
           cat ../logs/error-explained.txt >> $GITHUB_STEP_SUMMARY
 
-      - name: Show AI Output in Console (Optional)
+      - name: Show AI Output
         run: cat logs/error-explained.txt
 
-      - name: Upload Explanation as Artifact
+      - name: Upload Artifacts (Optional)
         uses: actions/upload-artifact@v4
         with:
           name: terraform-ai-explanation
-          path: logs/error-explained.txt
+          path: logs/
