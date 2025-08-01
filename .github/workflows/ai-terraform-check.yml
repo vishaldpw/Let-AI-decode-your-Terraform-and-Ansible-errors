@@ -1,7 +1,7 @@
 name: Explain Terraform Errors using AI
+
 on:
   workflow_dispatch:
-
 
 jobs:
   explain:
@@ -27,20 +27,29 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
+          mkdir -p logs
           terraform -chdir=terraform init
-          terraform -chdir=terraform apply -auto-approve 2> error.log || true
+          terraform -chdir=terraform apply -auto-approve -no-color 2> logs/error.log || true
 
       - name: Show raw Terraform error log
         run: |
           echo "Raw Error Log:"
-          cat error.log
+          cat logs/error.log
 
       - name: Run AI Error Explanation Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd scripts
-          python3 explain-error.py ../error.log | tee ../error-explained.txt >> $GITHUB_STEP_SUMMARY
+          python3 explain-error.py ../logs/error.log | tee ../logs/error-explained.txt
+          echo "### 🧠 AI Explanation of Terraform Error" >> $GITHUB_STEP_SUMMARY
+          cat ../logs/error-explained.txt >> $GITHUB_STEP_SUMMARY
 
-      - name: Show AI Output (Optional)
-        run: cat error-explained.txt
+      - name: Show AI Output in Console (Optional)
+        run: cat logs/error-explained.txt
+
+      - name: Upload Explanation as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-ai-explanation
+          path: logs/error-explained.txt
