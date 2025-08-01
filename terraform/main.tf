@@ -14,7 +14,7 @@ terraform {
 }
 
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "bucket-vishal-01082025"
+  #bucket = "bucket-vishal-01082025"
 
   tags = {
     Name        = "BucketVishal"
