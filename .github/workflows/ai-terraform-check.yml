@@ -1,9 +1,5 @@
 name: Explain Terraform Errors using AI
-
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 
@@ -34,7 +30,7 @@ jobs:
           terraform -chdir=terraform init
           terraform -chdir=terraform apply -auto-approve 2> error.log || true
 
-      - name: Debug: Show raw Terraform error log
+      - name: Show raw Terraform error log
         run: |
           echo "Raw Error Log:"
           cat error.log
