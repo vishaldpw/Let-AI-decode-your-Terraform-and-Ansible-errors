@@ -33,4 +33,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd scripts
-          python3 explain-error.py ../error.log
+          python3 explain-error.py ../error.log | tee ../error-explained.txt
+
+      - name: Show AI Output
+        run: cat error-explained.txt
+
