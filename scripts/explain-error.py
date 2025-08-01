@@ -1,26 +1,58 @@
 import os
 import sys
-from openai import OpenAI
+import openai
 
-# Ensure you imported sys — already fixed
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def load_error_log(file_path):
+    """Load and filter Terraform error lines from the log."""
+    try:
+        with open(file_path, "r") as f:
+            lines = f.readlines()
+        # Filter lines with 'Error:' or terraform trace blocks
+        filtered_lines = [line.strip() for line in lines if "Error:" in line or "│" in line]
+        return "\n".join(filtered_lines).strip()
+    except FileNotFoundError:
+        return None
 
-# Read error log passed as argument
-with open(sys.argv[1], "r") as f:
-    error_log = f.read()
+def explain_error_with_ai(error_text):
+    """Send error to OpenAI for explanation."""
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    if not openai.api_key:
+        print("ERROR: OPENAI_API_KEY environment variable not set.")
+        sys.exit(1)
 
-# Call OpenAI API
-response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[
-        {
-            "role": "system",
-            "content": "You are a Terraform and Ansible expert. Explain the following error and suggest how to fix it.",
-        },
-        {"role": "user", "content": error_log},
-    ],
-    temperature=0.3,
-)
+    if not error_text:
+        print("No errors found in the log.")
+        return
 
-# Print the explanation
-print(response.choices[0].message.content)
+    print("Sending error to OpenAI for explanation...\n")
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert in Terraform. Analyze the following error message from a Terraform run. "
+                    "Provide a clear explanation and recommend how to fix it. Avoid generic responses and hallucinations."
+                ),
+            },
+            {
+                "role": "user",
+                "content": error_text,
+            },
+        ],
+        temperature=0.3,
+    )
+
+    explanation = response.choices[0].message["content"]
+    print("🔍 AI Explanation:\n")
+    print(explanation)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python explain-error.py <path-to-error.log>")
+        sys.exit(1)
+
+    error_log_path = sys.argv[1]
+    error_text = load_error_log(error_log_path)
+    explain_error_with_ai(error_text)
