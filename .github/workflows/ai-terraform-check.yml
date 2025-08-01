@@ -19,22 +19,29 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Set up Python & install OpenAI SDK
+        run: pip install openai
+
       - name: Run Terraform (Expecting it may fail)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd terraform
           terraform init
           terraform apply -auto-approve 2> ../error.log || true
 
-      - name: Install Python dependencies
-        run: pip install openai
+      - name: Debug: Show raw Terraform error log
+        run: |
+          echo "Raw Error Log:"
+          cat error.log
 
       - name: Run AI Error Explanation Script
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd scripts
-          python3 explain-error.py ../error.log | tee ../error-explained.txt
+          python3 explain-error.py ../error.log | tee ../error-explained.txt >> $GITHUB_STEP_SUMMARY
 
-      - name: Show AI Output
+      - name: Show AI Output (Optional)
         run: cat error-explained.txt
-
