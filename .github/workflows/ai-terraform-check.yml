@@ -1,0 +1,39 @@
+name: Explain Terraform Errors using AI
+
+on:
+  push:
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/ai-terraform-check.yml'
+
+jobs:
+  explain:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Run Terraform (Expecting it may fail)
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve 2> ../error.log || true
+
+      - name: Install Python dependencies
+        run: pip install openai
+
+      - name: Run AI Error Explanation Script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd scripts
+          python3 explain-error.py ../error.log
