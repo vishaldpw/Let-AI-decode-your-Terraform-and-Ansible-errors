@@ -1,5 +1,4 @@
 name: Explain Terraform Errors using AI
-
 on:
   workflow_dispatch:
 
