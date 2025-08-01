@@ -1,6 +1,11 @@
-name: "Explain Terraform Errors using AI"
+name: Explain Terraform Errors using AI
+
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
+
 
 jobs:
   explain:
