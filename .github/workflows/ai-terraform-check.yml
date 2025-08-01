@@ -14,24 +14,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
 
-      - name: Set up Python & install OpenAI SDK
+      - name: Set up Python & Install OpenAI SDK
         run: pip install openai
 
-      - name: Run Terraform and Capture Errors
+      - name: Run Terraform with Debug Logging
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_LOG: ERROR
         run: |
           mkdir -p logs
-          terraform -chdir=terraform init
-          terraform -chdir=terraform apply -auto-approve 2> logs/error.log || echo "Terraform failed. Capturing error."
+          terraform -chdir=terraform init |& tee logs/error.log
+          terraform -chdir=terraform apply -auto-approve |& tee -a logs/error.log || echo "Terraform failed. Capturing error."
 
-      - name: Show raw Terraform error log
+      - name: Show Raw Terraform Error Log
         run: |
           echo "Raw Error Log:"
           cat logs/error.log
@@ -48,8 +49,10 @@ jobs:
       - name: Show AI Output
         run: cat logs/error-explained.txt
 
-      - name: Upload Artifacts (Optional)
+      - name: Upload logs and explanation as artifact
         uses: actions/upload-artifact@v4
         with:
           name: terraform-ai-explanation
-          path: logs/
+          path: |
+            logs/error.log
+            logs/error-explained.txt
