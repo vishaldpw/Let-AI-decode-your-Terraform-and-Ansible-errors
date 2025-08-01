@@ -20,7 +20,9 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Set up Python & install OpenAI SDK
-        run: pip install openai
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install openai
 
       - name: Run Terraform (Expecting it may fail)
         env:

@@ -1,14 +1,13 @@
 import os
 import sys
 import openai
-from openai.error import OpenAIError
+from openai import OpenAIError  # ✅ FIXED THIS IMPORT
 
 def load_error_log(file_path):
     """Load and filter Terraform error lines from the log."""
     try:
         with open(file_path, "r") as f:
             lines = f.readlines()
-        # Filter lines with 'Error:' or Terraform pipe blocks
         filtered_lines = [line.strip() for line in lines if "Error:" in line or "│" in line]
         return "\n".join(filtered_lines).strip()
     except FileNotFoundError:
@@ -38,7 +37,7 @@ def explain_error_with_ai(error_text):
                     "role": "system",
                     "content": (
                         "You are an expert in Terraform. Analyze the following error message from a Terraform run. "
-                        "Provide a clear explanation and recommend how to fix it. Avoid generic responses and hallucinations."
+                        "Provide a clear explanation and recommend how to fix it."
                     ),
                 },
                 {
