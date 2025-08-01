@@ -1,10 +1,7 @@
 name: Explain Terraform Errors using AI
 
 on:
-  push:
-    paths:
-      - 'terraform/**'
-      - '.github/workflows/ai-terraform-check.yml'
+  workflow_dispatch:
 
 jobs:
   explain:
