@@ -1,14 +1,14 @@
-import openai
 import os
 import sys
+from openai import OpenAI
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-# Fix the correct log path
+# Path from root to error log
 error_log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../logs/error.log"))
 
 if not os.path.exists(error_log_path):
-    print("❌ Error log not found:", error_log_path)
+    print(f"❌ Error log not found at: {error_log_path}")
     sys.exit(1)
 
 with open(error_log_path, "r") as f:
@@ -18,7 +18,7 @@ if not error_text.strip():
     print("❌ Error log is empty. Nothing to analyze.")
     sys.exit(1)
 
-response = openai.ChatCompletion.create(
+response = client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=[
         {
@@ -28,4 +28,4 @@ response = openai.ChatCompletion.create(
     ]
 )
 
-print(response["choices"][0]["message"]["content"])
+print(response.choices[0].message.content)
