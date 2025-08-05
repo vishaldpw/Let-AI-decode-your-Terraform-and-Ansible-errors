@@ -3,6 +3,10 @@ name: Explain Terraform Errors using AI
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   explain:
     runs-on: ubuntu-latest
@@ -42,9 +46,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd scripts
-          python3 explain-error.py ../logs/error.log | tee ../logs/error-explained.txt
-          echo "### 🧠 AI Explanation of Terraform Error" >> $GITHUB_STEP_SUMMARY
-          cat ../logs/error-explained.txt >> $GITHUB_STEP_SUMMARY
+          python3 explain-error.py
 
       - name: Show AI Output
         run: cat logs/error-explained.txt
@@ -56,3 +58,12 @@ jobs:
           path: |
             logs/error.log
             logs/error-explained.txt
+            logs/gh-issue-body.md
+
+      - name: Create GitHub Issue if Terraform failed
+        if: failure()
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "🚨 Terraform Apply Failed"
+          content-filepath: logs/gh-issue-body.md
+          labels: terraform, error, ai-generated
