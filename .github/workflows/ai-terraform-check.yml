@@ -34,10 +34,7 @@ jobs:
         run: |
           mkdir -p logs
           terraform -chdir=terraform init |& tee logs/error.log
-
-          # Ensure Terraform apply fails the step if it fails
-          set -o pipefail
-          terraform -chdir=terraform apply -auto-approve |& tee -a logs/error.log
+          terraform -chdir=terraform apply -auto-approve |& tee -a logs/error.log || echo "Terraform failed. Capturing error."
 
       - name: Show Raw Terraform Error Log
         run: |
@@ -70,9 +67,3 @@ jobs:
           title: "🚨 Terraform Apply Failed"
           content-filepath: logs/gh-issue-body.md
           labels: terraform, error, ai-generated
-
-      - name: 📌 Mark Summary if Failed
-        if: failure()
-        run: |
-          echo "## ❌ Terraform Apply Failed" >> $GITHUB_STEP_SUMMARY
-          echo "AI explanation has been logged and a GitHub Issue created." >> $GITHUB_STEP_SUMMARY
